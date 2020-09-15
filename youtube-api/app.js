@@ -6,7 +6,7 @@ const OAuth2 = google.auth.OAuth2;
 
 const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
 const TOKEN_DIR = '.credentials/';
-const TOKEN_PATH = TOEKN_DIR + 'token.json';
+const TOKEN_PATH = TOKEN_DIR + 'token.json';
 
 fs.readFile('client_secret.json', function processClientSecrets(err, content){
     if (err) {
@@ -26,6 +26,7 @@ function authorize(credentials, callback) {
 
     fs.readFile(TOKEN_PATH, function(err, token) {
         if(err) {
+            getNewToke(oauth2Client, callback);
             
         } else {
             oauth2Client.credentials = JSON.parse(token);
@@ -36,4 +37,24 @@ function authorize(credentials, callback) {
 
 function getChannel(){
     
+}
+
+function getNewToken(oauth2Client, callback) {
+
+    // generateAuth opts not working
+    const authUrl = oauth2Client.generateAuthUrl(opts:{
+        access_type: 'offline',
+        scope: SCOPES
+    });
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    console.log('Authorize this app by visiting this url: ', authUrl);
+
+    rl.question('Enter the code from the page here: ', function(code){
+        rl.close();
+
+        console.log('code', code)
+    });
 }
