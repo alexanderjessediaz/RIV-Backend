@@ -1,3 +1,5 @@
+// const route = require("/Users/ajdiaz/PersonalProjects/youtube-vidz-back/youtube-api/app.js")
+const path = require('path').resolve("app.js")
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
@@ -26,7 +28,7 @@ function authorize(credentials, callback) {
 
     fs.readFile(TOKEN_PATH, function(err, token) {
         if(err) {
-            getNewToke(oauth2Client, callback);
+            getNewToken(oauth2Client, callback);
             
         } else {
             oauth2Client.credentials = JSON.parse(token);
@@ -35,14 +37,37 @@ function authorize(credentials, callback) {
     });
 }
 
-function getChannel(){
-    
+function getChannel(auth){
+    const service = google.youtube('v3');
+
+    service.channels.list({
+        auth: auth,
+        part:'snippet,contentDetails,statistics',
+        forUsername: 'AJ Diaz'
+    }, function(err, response) {
+        if(err) {
+            console.log('The API returned an error: ', err)
+            return;
+        }
+
+        const channels = response.data.items;
+
+        if(channels.length == 0) {
+            console.log('No channel found.')
+        } else {
+            console.log('id:', channels[0].id)
+            console.log('title:', channels[0].snippet.title)
+            console.log('viewcount:', channels[0].statistics.viewCount)
+        }
+    })
 }
+    
+
 
 function getNewToken(oauth2Client, callback) {
 
-    // generateAuth opts not working
-    const authUrl = oauth2Client.generateAuthUrl(opts:{
+  
+    const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: SCOPES
     });
@@ -55,6 +80,31 @@ function getNewToken(oauth2Client, callback) {
     rl.question('Enter the code from the page here: ', function(code){
         rl.close();
 
-        console.log('code', code)
+        oauth2Client.getToken(code, function(err, token) {
+            if(err) {
+                console.log('Error while trying to retrieve access token', err)
+                return;
+            } else {
+                oauth2Client.credentials = token;
+                storeToken(token);
+                callback(oauth2Client);
+            }
+        })
+
     });
+}
+
+function storeToken(token) {
+    try {
+        fs.mkdirSync(TOKEN_DIR);
+    } catch (err) {
+        if(err.code !== 'EXIST') {
+            throw err;
+        }
+    }
+
+    fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+        if(err) throw err;
+        console.log('Token stored to ' + TOKEN_PATH)
+    })
 }

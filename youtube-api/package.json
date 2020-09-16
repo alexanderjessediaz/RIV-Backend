@@ -22,7 +22,9 @@
   },
   "homepage": "https://github.com/alexanderjessediaz/RIV-Backend#readme",
   "dependencies": {
+    "express": "^4.17.1",
     "google-auth-library": "^6.0.6",
     "googleapis": "^59.0.0"
-  }
+  },
+  "devDependencies": {}
 }
